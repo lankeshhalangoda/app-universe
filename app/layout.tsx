@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Emojot App Universe - Internal Productivity Tools",
+  title: "Emojot App Universe | Internal & External Productivity Tools",
   description: "A minimal showcase of internal and external productivity tools for the Emojot team",
     generator: 'v0.dev'
 }
