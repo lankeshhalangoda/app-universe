@@ -59,6 +59,18 @@ const apps: App[] = [
     previewImage: "/images/csm-suite.png",
   },
   {
+    id: "orm-config-generator",
+    title: "ORM Config Generator",
+    url: "https://orm-config-generator.vercel.app/",
+    description:
+      "Easily generate ORM configuration JSON files to automate review collection, categorization, and ticket creation for Google and Facebook reviews.",
+    fullDescription:
+      "Easily generate ORM configuration JSON files to automate review collection, categorization, and ticket creation for platforms like Google and Facebook. Define channel IDs, workflow mappings, sentiment rules, and star rating thresholds. Supports business location linking via EH, AI-powered sentiment triggers, and conditional workflow integration. Designed for Emojot Solution Engineers to streamline ORM setup and ensure fast deployment across multi-location brands.",
+    tags: ["emojot", "ORM", "Reviews", "Automation", "Configuration", "Google", "Facebook"],
+    category: "internal",
+    previewImage: "/images/orm-config-generator.png"
+  },
+  {
     id: "wf-builder",
     title: "Solo Workflow Generator",
     url: "https://wfbuilder.onrender.com/",
@@ -268,11 +280,10 @@ export default function EmojotAppUniverse() {
                     <Badge
                       key={tag}
                       variant={selectedTag === tag ? "default" : "secondary"}
-                      className={`cursor-pointer text-xs transition-all ${
-                        selectedTag === tag
+                      className={`cursor-pointer text-xs transition-all ${selectedTag === tag
                           ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white"
                           : "bg-black/60 text-gray-300 border-gray-600 hover:bg-gradient-to-r hover:from-pink-500/20 hover:to-purple-500/20 hover:border-pink-400"
-                      }`}
+                        }`}
                       onClick={() => handleTagClick(tag)}
                     >
                       {tag}
