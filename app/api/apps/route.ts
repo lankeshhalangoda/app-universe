@@ -5,6 +5,7 @@ import path from "path"
 export const dynamic = "force-dynamic"
 
 const APPS_DIR = path.join(process.cwd(), "data", "apps")
+const IS_PRODUCTION = process.env.VERCEL === "1" || process.env.NODE_ENV === "production"
 
 export interface App {
   id: string
@@ -42,7 +43,7 @@ function sanitizeFilename(title: string): string {
     .substring(0, 100) // Limit length
 }
 
-export async function GET() {
+async function getAppsFromFiles(): Promise<App[]> {
   try {
     await ensureDir(APPS_DIR)
     const files = await fs.readdir(APPS_DIR)
@@ -56,28 +57,35 @@ export async function GET() {
       })
     )
 
-    // Remove duplicates by keeping the first occurrence of each ID
-    const uniqueApps = apps.filter((app, index, self) =>
+    return apps.filter((app, index, self) =>
       index === self.findIndex((a) => a.id === app.id)
     )
+  } catch {
+    return []
+  }
+}
 
-    // Read order from orders.json
+async function getOrdersFromFile(): Promise<string[]> {
+  try {
     const ordersFile = path.join(process.cwd(), "data", "orders.json")
-    let orderMap: string[] = []
-    try {
-      const ordersContent = await fs.readFile(ordersFile, "utf-8")
-      orderMap = JSON.parse(ordersContent)
-    } catch {
-      // If orders.json doesn't exist, use default order (by existing order field or ID)
-      orderMap = uniqueApps.sort((a, b) => (a.order || 0) - (b.order || 0)).map((app) => app.id)
-    }
+    const ordersContent = await fs.readFile(ordersFile, "utf-8")
+    return JSON.parse(ordersContent)
+  } catch {
+    return []
+  }
+}
 
-    // Sort apps according to order in orders.json
-    const appMap = new Map(uniqueApps.map((app) => [app.id, app]))
+export async function GET() {
+  try {
+    // In production, read from committed files only (read-only)
+    const apps = await getAppsFromFiles()
+    const orderMap = await getOrdersFromFile()
+
+    // Sort apps according to order
+    const appMap = new Map(apps.map((app) => [app.id, app]))
     const orderedApps: App[] = []
     const unorderedApps: App[] = []
 
-    // Add apps in the order specified in orders.json
     for (const id of orderMap) {
       const app = appMap.get(id)
       if (app) {
@@ -86,7 +94,6 @@ export async function GET() {
       }
     }
 
-    // Add any apps not in orders.json at the end
     for (const app of appMap.values()) {
       unorderedApps.push(app)
     }
@@ -100,25 +107,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    // Ensure data directory exists first
-    const dataDir = path.join(process.cwd(), "data")
-    try {
-      await fs.access(dataDir)
-    } catch {
-      await fs.mkdir(dataDir, { recursive: true })
-    }
+    const app: App = await request.json()
     
-    // Then ensure apps directory exists
-    await ensureDir(APPS_DIR)
-    
-    let app: App
-    try {
-      app = await request.json()
-    } catch (error) {
-      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 })
-    }
-    
-    if (!app.title || !app.title.trim()) {
+    if (!app.title?.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
     }
     
@@ -126,49 +117,75 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "App ID is required" }, { status: 400 })
     }
     
-    const filename = `${sanitizeFilename(app.title)}.json`
+    // In production (Vercel), use GitHub API to commit files
+    if (IS_PRODUCTION) {
+      const filename = `${sanitizeFilename(app.title)}.json`
+      const filePath = `data/apps/${filename}`
+      const content = JSON.stringify(app, null, 2)
+      
+      try {
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+        const response = await fetch(`${baseUrl}/api/github`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filePath,
+            content,
+            message: `Update app: ${app.title}`,
+          }),
+        })
+        
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.details || error.error || "GitHub commit failed")
+        }
+        
+        return NextResponse.json({ success: true })
+      } catch (error: any) {
+        console.error("[v0] GitHub commit failed:", error)
+        console.log("[v0] App data to commit:", content)
+        return NextResponse.json({ 
+          success: false, 
+          error: "Failed to commit to GitHub. Check console for data.",
+          details: error?.message 
+        }, { status: 500 })
+      }
+    }
     
-    if (!filename || filename === ".json") {
+    // Development: write to files
+    await ensureDir(APPS_DIR)
+    const filename = `${sanitizeFilename(app.title)}.json`
+    if (filename === ".json") {
       return NextResponse.json({ error: "Invalid title" }, { status: 400 })
     }
     
     const filePath = path.join(APPS_DIR, filename)
 
-    // If editing existing app, check if title changed and delete old file
+    // If editing and title changed, delete old file
     if (app.id) {
       try {
-        const files = await fs.readdir(APPS_DIR)
-        const jsonFiles = files.filter((f) => f.endsWith(".json"))
-        
-        for (const file of jsonFiles) {
-          const oldPath = path.join(APPS_DIR, file)
+        const files = await fs.readdir(APPS_DIR).catch(() => [])
+        for (const file of files.filter((f) => f.endsWith(".json"))) {
           try {
-            const content = await fs.readFile(oldPath, "utf-8")
-            const oldApp = JSON.parse(content) as App
-            
-            // If same ID but different title, delete old file
+            const oldPath = path.join(APPS_DIR, file)
+            const oldApp = JSON.parse(await fs.readFile(oldPath, "utf-8")) as App
             if (oldApp.id === app.id && oldApp.title !== app.title && file !== filename) {
-              await fs.unlink(oldPath)
+              await fs.unlink(oldPath).catch(() => {})
               break
             }
-          } catch (err) {
-            // Continue if file can't be read
-            console.error(`[v0] Error reading file ${file}:`, err)
-          }
+          } catch {}
         }
-      } catch (err) {
-        console.error("[v0] Error reading apps directory:", err)
-        // Continue anyway - might be first app
-      }
+      } catch {}
     }
 
     await fs.writeFile(filePath, JSON.stringify(app, null, 2), "utf-8")
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error("[v0] Error saving app:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      { error: "Failed to save app", details: errorMessage },
+      { error: "Failed to save app", details: error?.message || String(error) },
       { status: 500 }
     )
   }

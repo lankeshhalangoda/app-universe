@@ -284,20 +284,8 @@ export default function AdminPanel() {
 
     const fullDescription = editorRef.current?.innerHTML || formData.fullDescription || ""
 
-    // Handle image - only URLs are supported now
-    let previewImage = formData.previewImage.trim()
-    
-    // If empty, use default image
-    if (!previewImage) {
-      previewImage = "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin16.png"
-    }
-    
-    // Validate it's a URL
-    if (!previewImage.startsWith("http://") && !previewImage.startsWith("https://")) {
-      // If not a URL, show error
-      alert("Please enter a valid image URL (must start with http:// or https://)")
-      return
-    }
+    // Just use the preview image URL as-is - it already previews correctly
+    const previewImage = formData.previewImage.trim()
 
     const app: App = currentApp
       ? { ...currentApp, ...formData, tags: tagsArray, fullDescription, previewImage, images: [] }
