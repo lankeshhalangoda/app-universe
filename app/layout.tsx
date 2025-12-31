@@ -1,11 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
-  title: "Emojot App Universe | Internal & External Productivity Tools",
-  description: "A minimal showcase of internal and external productivity tools for the Emojot team",
-    generator: 'v0.dev'
+  title: "App Universe - Productivity Tools",
+  description: "Discover internal and external productivity tools",
+    generator: 'v0.app'
 }
 
 export default function RootLayout({
@@ -15,13 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        style={{
-          fontFamily:
-            '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Source Code Pro", "Menlo", "Consolas", monospace',
-        }}
-      >
-        {children}
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
