@@ -104,6 +104,8 @@ export async function POST(request: Request) {
     const filePath = path.join(IMAGES_DIR, filename)
     await fs.writeFile(filePath, buffer)
 
+    // Return public path (Next.js serves from public folder automatically)
+    // API route at /api/images/[...path] serves as fallback for hosted environments
     return NextResponse.json({ path: `/images/apps/${filename}` })
   } catch (error) {
     console.error("[v0] Error saving image:", error)

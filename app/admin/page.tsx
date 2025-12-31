@@ -286,11 +286,13 @@ export default function AdminPanel() {
 
     const fullDescription = editorRef.current?.innerHTML || formData.fullDescription || ""
 
-    // Save image if it's base64
-    let previewImage = formData.previewImage
+    // Handle image - can be URL, base64, or local path
+    let previewImage = formData.previewImage.trim()
+    
     if (previewImage.startsWith("data:image")) {
+      // Base64 image - upload it
       if (!previewImage.startsWith("data:image/png;base64,")) {
-        alert("Only PNG images are allowed.")
+        alert("Only PNG images are allowed for upload.")
         return
       }
 
@@ -313,6 +315,18 @@ export default function AdminPanel() {
 
       const { path } = await response.json()
       previewImage = path
+    } else if (previewImage.startsWith("http://") || previewImage.startsWith("https://")) {
+      // External URL - use as-is (no validation needed, will fail gracefully if invalid)
+      // Just keep the URL
+    } else if (previewImage.startsWith("/")) {
+      // Local path - use as-is
+      // Just keep the path
+    } else if (previewImage) {
+      // Might be a relative URL or invalid - try to handle gracefully
+      // If it doesn't start with /, assume it's meant to be a local path
+      if (!previewImage.startsWith("/")) {
+        previewImage = "/" + previewImage
+      }
     }
 
     const app: App = currentApp
@@ -718,9 +732,12 @@ export default function AdminPanel() {
                     id="previewImage"
                     value={formData.previewImage}
                     onChange={(e) => setFormData({ ...formData, previewImage: e.target.value })}
-                    placeholder="/images/app-icon.png or paste URL"
+                    placeholder="Enter image URL (https://...) or upload PNG file"
                     className="rounded-lg"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    You can paste an image URL (e.g., https://example.com/image.png) or upload a PNG file
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -730,7 +747,7 @@ export default function AdminPanel() {
                       className="rounded-lg"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Image
+                      Upload PNG
                     </Button>
                     <input
                       ref={fileInputRef}
@@ -749,6 +766,10 @@ export default function AdminPanel() {
                       width={64}
                       height={64}
                       className="object-cover w-16 h-16 rounded-lg border"
+                      onError={(e) => {
+                        // If image fails to load, show placeholder
+                        e.currentTarget.src = "/placeholder.svg"
+                      }}
                     />
                   </div>
                 )}
