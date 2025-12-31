@@ -1,0 +1,20 @@
+{
+  "id": "wf-builder",
+  "title": "Solo Workflow Generator",
+  "url": "https://wfbuilder.onrender.com/",
+  "description": "Create standalone Workflow JSON files tailored to a specific use case, complete with fields, status flows, alert triggers, and escalation logic.",
+  "fullDescription": "Create standalone Workflow JSON files tailored to a specific use case, complete with fields, status flows, alert triggers, and escalation logic. Suitable for building and testing new workflows independently. Features visual workflow designer, real-time validation, and comprehensive testing suite for workflow logic verification. Includes simulation tools, performance analytics, and automated documentation generation.",
+  "tags": [
+    "emojot",
+    "Workflow",
+    "Builder",
+    "Escalation",
+    "Logic",
+    "JSON"
+  ],
+  "category": "internal",
+  "previewImage": "/images/solo-workflow.png",
+  "images": [],
+  "isNew": true,
+  "order": 4
+}

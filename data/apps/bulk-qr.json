@@ -1,0 +1,20 @@
+{
+  "id": "bulk-qr",
+  "title": "Bulk QR Generator",
+  "url": "https://emojot-qr-generator.vercel.app/",
+  "description": "Create large batches of QR codes with logos and custom location labels from Excel files. Perfect for physical campaigns, event check-ins, or on-site surveys.",
+  "fullDescription": "Create large batches of QR codes with logos and custom location labels from Excel files. Perfect for physical campaigns, event check-ins, or on-site surveys. Allows exporting in PNG format with built-in caching. Supports bulk processing of thousands of QR codes simultaneously with advanced customization options including logo placement, error correction levels, and output formats. Features batch validation, progress tracking, and automated file organization.",
+  "tags": [
+    "emojot",
+    "QR",
+    "Generator",
+    "Branding",
+    "Location",
+    "Bulk"
+  ],
+  "category": "internal",
+  "previewImage": "/images/apps/bulk-qr-a.png",
+  "images": [],
+  "isNew": false,
+  "order": 0
+}

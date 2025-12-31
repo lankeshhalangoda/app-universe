@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import {
   ArrowLeft,
   Plus,
@@ -13,8 +13,7 @@ import {
   ListOrdered,
   LinkIcon,
   LogOut,
-  ChevronUp,
-  ChevronDown,
+  GripVertical,
   Upload,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,22 +23,24 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
 import Image from "next/image"
 import Link from "next/link"
-import { getApps, saveApps, type App } from "@/lib/apps-data"
+import type { App } from "@/lib/apps-data"
 import { useTheme } from "next-themes"
-
-const ADMIN_USERNAME = "admin"
-const ADMIN_PASSWORD = "emojot2024"
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [loginError, setLoginError] = useState("")
   const [apps, setApps] = useState<App[]>([])
+  const [isLoadingApps, setIsLoadingApps] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [currentApp, setCurrentApp] = useState<App | null>(null)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     title: "",
     url: "",
@@ -55,32 +56,86 @@ export default function AdminPanel() {
   const { theme, mounted } = useTheme()
 
   useEffect(() => {
-    const authState = localStorage.getItem("adminAuth")
-    if (authState === "authenticated") {
-      setIsAuthenticated(true)
-    }
+    checkAuth()
   }, [])
 
-  useEffect(() => {
-    setApps(getApps())
-  }, [])
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true)
-      localStorage.setItem("adminAuth", "authenticated")
-      setLoginError("")
-    } else {
-      setLoginError("Invalid username or password")
+  async function checkAuth() {
+    setIsCheckingAuth(true)
+    try {
+      const response = await fetch("/api/auth", { cache: "no-store" })
+      if (response.ok) {
+        const data = await response.json()
+        setIsAuthenticated(data.authenticated || false)
+      }
+    } catch (error) {
+      console.error("[v0] Error checking auth:", error)
+      setIsAuthenticated(false)
+    } finally {
+      setIsCheckingAuth(false)
     }
   }
 
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    setUsername("")
-    setPassword("")
-    localStorage.removeItem("adminAuth")
+  useEffect(() => {
+    loadApps()
+  }, [])
+
+  async function loadApps() {
+    setIsLoadingApps(true)
+    try {
+      const response = await fetch("/api/apps", { cache: "no-store" })
+      if (response.ok) {
+        const data = await response.json()
+        // Remove duplicates by keeping the first occurrence of each ID
+        const uniqueApps = data.filter((app: App, index: number, self: App[]) =>
+          index === self.findIndex((a) => a.id === app.id)
+        )
+        setApps(uniqueApps)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading apps:", error)
+    } finally {
+      setIsLoadingApps(false)
+    }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, action: "login" }),
+      })
+
+      if (response.ok) {
+        setIsAuthenticated(true)
+        setLoginError("")
+        setUsername("")
+        setPassword("")
+      } else {
+        const data = await response.json()
+        setLoginError(data.error || "Invalid username or password")
+      }
+    } catch (error) {
+      console.error("[v0] Login error:", error)
+      setLoginError("Failed to login. Please try again.")
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "logout" }),
+      })
+    } catch (error) {
+      console.error("[v0] Logout error:", error)
+    } finally {
+      setIsAuthenticated(false)
+      setUsername("")
+      setPassword("")
+    }
   }
 
   const handleAddNew = () => {
@@ -118,12 +173,30 @@ export default function AdminPanel() {
     setIsEditing(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this app?")) {
-      const updatedApps = apps.filter((app) => app.id !== id)
-      setApps(updatedApps)
-      saveApps(updatedApps)
-      window.dispatchEvent(new Event("apps-updated"))
+      try {
+        const response = await fetch("/api/apps", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        })
+
+        if (response.ok) {
+          // Remove from orders.json
+          const ordersResponse = await fetch("/api/orders")
+          const currentOrders = ordersResponse.ok ? await ordersResponse.json() : []
+          const newOrders = currentOrders.filter((appId: string) => appId !== id)
+          await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newOrders),
+          })
+          await loadApps()
+        }
+      } catch (error) {
+        console.error("[v0] Error deleting app:", error)
+      }
     }
   }
 
@@ -132,27 +205,80 @@ export default function AdminPanel() {
     editorRef.current?.focus()
   }
 
-  const moveUp = (index: number) => {
-    if (index === 0) return
-    const newApps = [...apps]
-    ;[newApps[index - 1], newApps[index]] = [newApps[index], newApps[index - 1]]
-    const appsWithOrder = newApps.map((app, idx) => ({ ...app, order: idx }))
-    setApps(appsWithOrder)
-    saveApps(appsWithOrder)
-    window.dispatchEvent(new Event("apps-updated"))
-  }
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = "move"
+    e.dataTransfer.dropEffect = "move"
+    // Improve drag performance
+    if (e.dataTransfer) {
+      e.dataTransfer.setData("text/html", "")
+    }
+  }, [])
 
-  const moveDown = (index: number) => {
-    if (index === apps.length - 1) return
-    const newApps = [...apps]
-    ;[newApps[index], newApps[index + 1]] = [newApps[index + 1], newApps[index]]
-    const appsWithOrder = newApps.map((app, idx) => ({ ...app, order: idx }))
-    setApps(appsWithOrder)
-    saveApps(appsWithOrder)
-    window.dispatchEvent(new Event("apps-updated"))
-  }
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = "move"
+    // Only update state if the index actually changed
+    setDragOverIndex((prev) => (prev !== index ? index : prev))
+  }, [])
 
-  const handleSave = () => {
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Only clear if we're actually leaving the card (not just moving to a child element)
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = e.clientX
+    const y = e.clientY
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOverIndex(null)
+    }
+  }, [])
+
+  const handleDrop = useCallback(async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragOverIndex(null)
+
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      return
+    }
+
+    // Optimistically update UI first
+    const newApps = [...apps]
+    const draggedApp = newApps[draggedIndex]
+    newApps.splice(draggedIndex, 1)
+    newApps.splice(dropIndex, 0, draggedApp)
+    setApps(newApps)
+    setDraggedIndex(null)
+
+    // Save order to orders.json (just the array of IDs)
+    const orderIds = newApps.map((app) => app.id)
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderIds),
+      })
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Unknown error" }))
+        throw new Error(`Failed to save order: ${error.error || "Unknown error"}`)
+      }
+      console.log("[v0] App order saved successfully")
+    } catch (error) {
+      console.error("[v0] Error saving app order:", error)
+      // If save fails, reload to get correct state from server
+      await loadApps()
+      alert("Failed to save app order. Please try again.")
+    }
+  }, [apps, draggedIndex])
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }, [])
+
+  const handleSave = async () => {
     const tagsArray = formData.tags
       .split(",")
       .map((tag) => tag.trim())
@@ -160,35 +286,94 @@ export default function AdminPanel() {
 
     const fullDescription = editorRef.current?.innerHTML || formData.fullDescription || ""
 
-    let updatedApps: App[]
-
-    if (currentApp) {
-      updatedApps = apps.map((app) =>
-        app.id === currentApp.id
-          ? { ...app, ...formData, tags: tagsArray, fullDescription, images: app.images || [] }
-          : app,
-      )
-    } else {
-      const newApp: App = {
-        id: `app-${Date.now()}`,
-        ...formData,
-        tags: tagsArray,
-        fullDescription,
-        images: [],
-        order: apps.length,
+    // Save image if it's base64
+    let previewImage = formData.previewImage
+    if (previewImage.startsWith("data:image")) {
+      if (!previewImage.startsWith("data:image/png;base64,")) {
+        alert("Only PNG images are allowed.")
+        return
       }
-      updatedApps = [...apps, newApp]
+
+      const response = await fetch("/api/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          image: previewImage,
+          isReplacement: !!currentApp,
+          oldTitle: currentApp?.title,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        alert(error.error || "Failed to save image")
+        return
+      }
+
+      const { path } = await response.json()
+      previewImage = path
     }
 
-    setApps(updatedApps)
-    saveApps(updatedApps)
-    window.dispatchEvent(new Event("apps-updated"))
-    setIsEditing(false)
+    const app: App = currentApp
+      ? { ...currentApp, ...formData, tags: tagsArray, fullDescription, previewImage, images: [] }
+      : {
+          id: `app-${Date.now()}`,
+          ...formData,
+          tags: tagsArray,
+          fullDescription,
+          previewImage,
+          images: [],
+          order: apps.length,
+        }
+
+    try {
+      const response = await fetch("/api/apps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(app),
+      })
+
+      if (response.ok) {
+        // If it's a new app, add it to the end of orders.json
+        if (!currentApp) {
+          const ordersResponse = await fetch("/api/orders")
+          const currentOrders = ordersResponse.ok ? await ordersResponse.json() : []
+          if (!currentOrders.includes(app.id)) {
+            const newOrders = [...currentOrders, app.id]
+            await fetch("/api/orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newOrders),
+            })
+          }
+        }
+        await loadApps()
+        setIsEditing(false)
+      }
+    } catch (error) {
+      console.error("[v0] Error saving app:", error)
+    }
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Validate PNG format
+    if (file.type !== "image/png") {
+      alert("Only PNG images are allowed. Please select a PNG file.")
+      e.target.value = ""
+      return
+    }
+
+    // Validate file size (100KB)
+    const MAX_SIZE = 100 * 1024
+    if (file.size > MAX_SIZE) {
+      alert(`Image size exceeds 100KB limit (${Math.round(file.size / 1024)}KB). Please use a smaller image.`)
+      e.target.value = ""
+      return
+    }
 
     const reader = new FileReader()
     reader.onloadend = () => {
@@ -205,6 +390,20 @@ export default function AdminPanel() {
       editorRef.current.innerHTML = ""
     }
   }, [isEditing])
+
+  // Show loader while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50/30 via-blue-50/30 to-purple-50/30 dark:from-pink-950/10 dark:via-blue-950/10 dark:to-purple-950/10 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-background/80 backdrop-blur-xl">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Spinner className="size-8 text-primary mb-4" />
+            <p className="text-muted-foreground">Checking authentication...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return (
@@ -303,10 +502,32 @@ export default function AdminPanel() {
       </header>
 
       <main className="container mx-auto px-6 py-8 max-w-4xl">
-        <div className="flex flex-col gap-4">
-          {apps.map((app, index) => (
-            <Card key={app.id} className="overflow-hidden">
+        {isLoadingApps ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Spinner className="size-8 text-primary mb-4" />
+            <p className="text-muted-foreground">Loading apps...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {apps.map((app, index) => (
+            <Card
+              key={`${app.id}-${index}`}
+              className={`overflow-hidden ${
+                draggedIndex === index ? "opacity-30 scale-95" : ""
+              } ${dragOverIndex === index && draggedIndex !== index ? "ring-2 ring-primary scale-[1.02]" : ""} transition-transform duration-150`}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+            >
               <div className="flex items-center gap-4 p-4">
+                <div
+                  className="cursor-grab active:cursor-grabbing flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors touch-none"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <GripVertical className="h-5 w-5" />
+                </div>
                 <div className="relative flex-shrink-0">
                   <Image
                     src={app.previewImage || "/placeholder.svg"}
@@ -316,7 +537,7 @@ export default function AdminPanel() {
                     className="object-cover w-16 h-16 rounded-lg"
                   />
                   {app.isNew && (
-                    <div className="absolute -top-2 -right-2 bg-black text-white text-xs font-bold px-2 py-0.5 rounded">
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded">
                       NEW
                     </div>
                   )}
@@ -337,45 +558,31 @@ export default function AdminPanel() {
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 flex-shrink-0">
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => moveUp(index)}
-                      disabled={index === 0}
-                      className="rounded-lg px-3"
-                    >
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => moveDown(index)}
-                      disabled={index === apps.length - 1}
-                      className="rounded-lg px-3"
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(app)} className="rounded-lg px-3">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(app.id)}
-                      className="rounded-lg px-3"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(app)}
+                    className="rounded-lg px-3"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(app.id)}
+                    className="rounded-lg px-3"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
       </main>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
@@ -528,7 +735,7 @@ export default function AdminPanel() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/png"
                       onChange={handleImageUpload}
                       className="hidden"
                     />

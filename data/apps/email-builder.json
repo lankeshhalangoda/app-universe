@@ -1,0 +1,13 @@
+{
+  "id": "email-builder",
+  "title": "Drag & Drop Template Creator",
+  "url": "https://emojot-email-builder.vercel.app/",
+  "description": "Build sleek, responsive HTML emails using a no-code, drag-and-drop builder. Export reusable, campaign-ready templates with clean formatting.",
+  "fullDescription": "Build sleek, responsive HTML emails using a no-code, drag-and-drop builder. Export reusable, campaign-ready templates with clean formatting. Ideal for internal and client communications. Features include pre-built components, mobile optimization, A/B testing capabilities, and integration with major email service providers. Advanced template library with customizable blocks, real-time preview, and automated testing across email clients.",
+  "tags": ["emojot", "Email", "Template", "Builder", "Drag and Drop", "Marketing"],
+  "category": "internal",
+  "previewImage": "/images/email-template.png",
+  "images": [],
+  "isNew": true,
+  "order": 1
+}

@@ -1,0 +1,13 @@
+{
+  "id": "short-io",
+  "title": "Short Link Generator",
+  "url": "https://app.short.io/",
+  "description": "Branded URL shortener for simplifying long survey links and enabling tracking. Supports custom domains and link performance analytics.",
+  "fullDescription": "Branded URL shortener for simplifying long survey links and enabling tracking. Supports custom domains and link performance analytics for digital campaigns and feedback flows. Advanced features include click tracking, geographic analytics, device detection, and comprehensive reporting dashboard for campaign optimization. Features bulk link creation, API integration, and automated link expiration management.",
+  "tags": ["Short URL", "Link Management", "Branding", "Analytics"],
+  "category": "external",
+  "previewImage": "/images/short-io.png",
+  "images": [],
+  "isNew": false,
+  "order": 5
+}

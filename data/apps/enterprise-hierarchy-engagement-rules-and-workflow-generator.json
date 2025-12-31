@@ -1,0 +1,21 @@
+{
+  "id": "csm-suite",
+  "title": "Enterprise Hierarchy, Engagement Rules, and Workflow Generator",
+  "url": "https://csm-suite.vercel.app/",
+  "description": "Automate the creation of Enterprise Hierarchy, Engagement Rules, and Workflow configuration files for CXM, CCM, and ORM products.",
+  "fullDescription": "Automate the creation of Enterprise Hierarchy, Engagement Rules, and Workflow configuration files for CXM, CCM, and ORM products. Combines user input and AI prompting to generate optimized file structures with minimal manual edits. Includes validation, testing tools, and deployment automation for enterprise-scale implementations. Features intelligent configuration suggestions, dependency mapping, and comprehensive documentation generation.",
+  "tags": [
+    "emojot",
+    "Workflow",
+    "Enterprise Hierarchy",
+    "Engagement Rules",
+    "Automation",
+    "CSM",
+    "AI"
+  ],
+  "category": "internal",
+  "previewImage": "/images/csm-suite.png",
+  "images": [],
+  "isNew": true,
+  "order": 1
+}

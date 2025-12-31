@@ -1,0 +1,13 @@
+{
+  "id": "base64",
+  "title": "Base64 Encoder",
+  "url": "https://www.base64decode.org/",
+  "description": "Convert files and images to Base64 format for embedding in email templates, HTML surveys, or image-based field entries.",
+  "fullDescription": "Convert files and images to Base64 format for embedding in email templates, HTML surveys, or image-based field entries. Streamlines asset embedding in no-code environments. Supports batch processing, multiple file formats, and provides optimization suggestions for better performance and compatibility. Features drag-and-drop interface, format validation, and automated compression options.",
+  "tags": ["Base64", "Encoding", "Conversion", "Images", "Files"],
+  "category": "external",
+  "previewImage": "/images/base64.png",
+  "images": [],
+  "isNew": false,
+  "order": 7
+}

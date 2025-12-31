@@ -1,0 +1,19 @@
+{
+  "id": "emosignature",
+  "title": "Emosignature Link Generator",
+  "url": "https://v0-survey-link-generator.vercel.app/",
+  "description": "Generate EmoSignature survey links with embedded department, location, or staff metadata. Ideal for role-based feedback collection.",
+  "fullDescription": "Generate EmoSignature survey links with embedded department, location, or staff metadata. Ideal for role-based feedback collection and Enterprise Hierarchy-mapped survey flows. Supports dynamic link generation, custom parameters, tracking analytics, and integration with existing survey platforms for seamless data collection. Features automated distribution, response tracking, and comprehensive reporting dashboard.",
+  "tags": [
+    "emojot",
+    "Survey",
+    "Link Generator",
+    "EmoSignature",
+    "Personalized Links"
+  ],
+  "category": "internal",
+  "previewImage": "/images/emosignature.png",
+  "images": [],
+  "isNew": true,
+  "order": 2
+}

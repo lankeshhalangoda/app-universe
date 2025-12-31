@@ -4,36 +4,43 @@ import { Search, ChevronDown, Moon, Sun, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Spinner } from "@/components/ui/spinner"
 import Image from "next/image"
 import { useTheme } from "next-themes"
-import { getApps, type App } from "@/lib/apps-data"
+import type { App } from "@/lib/apps-data"
 
 export default function AppUniverse() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [apps, setApps] = useState<App[]>([])
+  const [isLoadingApps, setIsLoadingApps] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
-    const loadedApps = getApps().sort((a, b) => (a.order || 0) - (b.order || 0))
-    setApps(loadedApps)
-
-    const handleStorageChange = () => {
-      const loadedApps = getApps().sort((a, b) => (a.order || 0) - (b.order || 0))
-      setApps(loadedApps)
-    }
-
-    window.addEventListener("storage", handleStorageChange)
-    window.addEventListener("apps-updated", handleStorageChange)
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-      window.removeEventListener("apps-updated", handleStorageChange)
-    }
+    loadApps()
   }, [])
+
+  async function loadApps() {
+    setIsLoadingApps(true)
+    try {
+      const response = await fetch("/api/apps", { cache: "no-store" })
+      if (response.ok) {
+        const data = await response.json()
+        // Remove duplicates by keeping the first occurrence of each ID
+        const uniqueApps = data.filter((app: App, index: number, self: App[]) =>
+          index === self.findIndex((a) => a.id === app.id)
+        )
+        setApps(uniqueApps)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading apps:", error)
+    } finally {
+      setIsLoadingApps(false)
+    }
+  }
 
   const filteredApps = useMemo(() => {
     return apps.filter((app) => {
@@ -129,14 +136,20 @@ export default function AppUniverse() {
         </div>
 
         {/* App List */}
-        <div className="space-y-3">
-          {filteredApps.map((app) => (
+        {isLoadingApps ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Spinner className="size-8 text-primary mb-4" />
+            <p className="text-muted-foreground">Loading apps...</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredApps.map((app, index) => (
             <div
-              key={app.id}
+              key={`${app.id}-${index}`}
               className="border rounded-xl bg-card overflow-hidden transition-all hover:shadow-lg relative"
             >
               {app.isNew && (
-                <div className="absolute top-0 right-0 bg-black text-white text-xs font-semibold px-3 py-1 rounded-bl-lg z-10">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg z-10">
                   NEW
                 </div>
               )}
@@ -214,9 +227,10 @@ export default function AppUniverse() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
-        {filteredApps.length === 0 && (
+        {!isLoadingApps && filteredApps.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="mb-4 text-lg text-muted-foreground">No apps found</p>
             <Button
