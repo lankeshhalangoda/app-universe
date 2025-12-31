@@ -2,62 +2,6 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-// Helper to commit file to GitHub
-async function commitToGitHub(filePath: string, content: string, message: string) {
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-  const GITHUB_REPO = process.env.GITHUB_REPO // Format: owner/repo
-  const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main"
-
-  if (!GITHUB_TOKEN || !GITHUB_REPO) {
-    throw new Error("GitHub credentials not configured")
-  }
-
-  // Get current file SHA if it exists
-  let sha: string | undefined
-  try {
-    const getFileRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
-      {
-        headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
-          Accept: "application/vnd.github.v3+json",
-        },
-      }
-    )
-    if (getFileRes.ok) {
-      const fileData = await getFileRes.json()
-      sha = fileData.sha
-    }
-  } catch {}
-
-  // Commit file
-  const contentBase64 = Buffer.from(content).toString("base64")
-  const response = await fetch(
-    `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message,
-        content: contentBase64,
-        branch: GITHUB_BRANCH,
-        ...(sha && { sha }),
-      }),
-    }
-  )
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to commit to GitHub")
-  }
-
-  return await response.json()
-}
-
 export async function POST(request: Request) {
   try {
     const { filePath, content, message } = await request.json()
@@ -66,7 +10,75 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "filePath and content are required" }, { status: 400 })
     }
 
-    const result = await commitToGitHub(filePath, content, message || `Update ${filePath}`)
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN
+    const GITHUB_REPO = process.env.GITHUB_REPO
+    const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main"
+
+    if (!GITHUB_TOKEN || !GITHUB_REPO) {
+      return NextResponse.json(
+        { error: "GitHub credentials not configured. Please set GITHUB_TOKEN and GITHUB_REPO environment variables." },
+        { status: 500 }
+      )
+    }
+
+    // Get current file SHA if it exists
+    let sha: string | undefined
+    try {
+      const getFileRes = await fetch(
+        `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
+        {
+          headers: {
+            Authorization: `Bearer ${GITHUB_TOKEN}`,
+            Accept: "application/vnd.github.v3+json",
+            "User-Agent": "App-Universe",
+          },
+        }
+      )
+      if (getFileRes.ok) {
+        const fileData = await getFileRes.json()
+        sha = fileData.sha
+      }
+    } catch (err) {
+      // File doesn't exist yet, that's fine
+    }
+
+    // Commit file
+    const contentBase64 = Buffer.from(content).toString("base64")
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+          "User-Agent": "App-Universe",
+        },
+        body: JSON.stringify({
+          message: message || `Update ${filePath}`,
+          content: contentBase64,
+          branch: GITHUB_BRANCH,
+          ...(sha && { sha }),
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let errorData
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        errorData = { message: errorText.substring(0, 200) }
+      }
+      console.error("[v0] GitHub API error:", errorData)
+      return NextResponse.json(
+        { error: "Failed to commit to GitHub", details: errorData.message || "Unknown error" },
+        { status: response.status }
+      )
+    }
+
+    const result = await response.json()
     return NextResponse.json({ success: true, result })
   } catch (error: any) {
     console.error("[v0] GitHub commit error:", error)
