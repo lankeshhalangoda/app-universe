@@ -28,12 +28,12 @@
   }
 
   .dark {
-    /* Dark mode with deep background and blue accent */
-    --background: 222 47% 11%;
+    /* Changed dark mode background to pure black */
+    --background: 0 0% 0%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 0 0% 0%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 0 0% 0%;
     --popover-foreground: 210 40% 98%;
     --primary: 217 91% 60%;
     --primary-foreground: 222 47% 11%;

@@ -6,13 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { useTheme } from "next-themes"
-import { getApps, getLastUpdated, type App } from "@/lib/apps-data"
+import { getApps, type App } from "@/lib/apps-data"
 
 export default function AppUniverse() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [apps, setApps] = useState<App[]>([])
-  const [lastUpdated, setLastUpdated] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -21,12 +20,10 @@ export default function AppUniverse() {
     setMounted(true)
     const loadedApps = getApps().sort((a, b) => (a.order || 0) - (b.order || 0))
     setApps(loadedApps)
-    setLastUpdated(getLastUpdated())
 
     const handleStorageChange = () => {
       const loadedApps = getApps().sort((a, b) => (a.order || 0) - (b.order || 0))
       setApps(loadedApps)
-      setLastUpdated(getLastUpdated())
     }
 
     window.addEventListener("storage", handleStorageChange)
@@ -85,7 +82,6 @@ export default function AppUniverse() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="text-sm text-muted-foreground">Last Updated: {lastUpdated}</div>
             <Button
               variant="ghost"
               size="icon"
@@ -140,10 +136,8 @@ export default function AppUniverse() {
               className="border rounded-xl bg-card overflow-hidden transition-all hover:shadow-lg relative"
             >
               {app.isNew && (
-                <div className="absolute top-0 right-0 overflow-hidden w-24 h-24 z-10 pointer-events-none">
-                  <div className="absolute -top-1 -right-6 bg-black dark:bg-black text-white text-[10px] font-bold pl-16 pr-8 py-1 rotate-45 shadow-lg origin-center">
-                    NEW
-                  </div>
+                <div className="absolute top-0 right-0 bg-black text-white text-xs font-semibold px-3 py-1 rounded-bl-lg z-10">
+                  NEW
                 </div>
               )}
 
