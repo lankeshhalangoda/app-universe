@@ -117,7 +117,7 @@ export default function AppUniverse() {
                 onClick={() => setSelectedCategory(category)}
                 className={`rounded-lg px-4 shrink-0 transition-colors ${
                   selectedCategory === category
-                    ? "bg-black dark:bg-black text-white hover:bg-black/90 dark:hover:bg-black/90 border-black"
+                    ? "bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 border-black dark:border-white"
                     : ""
                 }`}
                 size="sm"
