@@ -55,6 +55,13 @@ export default function AdminPanel() {
   const { theme, mounted } = useTheme()
 
   useEffect(() => {
+    const authState = localStorage.getItem("adminAuth")
+    if (authState === "authenticated") {
+      setIsAuthenticated(true)
+    }
+  }, [])
+
+  useEffect(() => {
     setApps(getApps())
   }, [])
 
@@ -62,6 +69,7 @@ export default function AdminPanel() {
     e.preventDefault()
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setIsAuthenticated(true)
+      localStorage.setItem("adminAuth", "authenticated")
       setLoginError("")
     } else {
       setLoginError("Invalid username or password")
@@ -72,6 +80,7 @@ export default function AdminPanel() {
     setIsAuthenticated(false)
     setUsername("")
     setPassword("")
+    localStorage.removeItem("adminAuth")
   }
 
   const handleAddNew = () => {

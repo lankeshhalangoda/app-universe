@@ -6,6 +6,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 export const metadata: Metadata = {
   title: "App Universe - Productivity Tools",
   description: "Discover internal and external productivity tools",
+  icons: {
+    icon: "/favicon.ico",
+  },
     generator: 'v0.app'
 }
 
