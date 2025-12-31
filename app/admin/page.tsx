@@ -14,7 +14,6 @@ import {
   LinkIcon,
   LogOut,
   GripVertical,
-  Upload,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -52,7 +51,6 @@ export default function AdminPanel() {
     isNew: false,
   })
   const editorRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const { theme, mounted } = useTheme()
 
   useEffect(() => {
@@ -286,44 +284,15 @@ export default function AdminPanel() {
 
     const fullDescription = editorRef.current?.innerHTML || formData.fullDescription || ""
 
-    // Handle image - can be URL, base64, or local path
+    // Handle image - only URLs and local paths are supported
     let previewImage = formData.previewImage.trim()
     
-    if (previewImage.startsWith("data:image")) {
-      // Base64 image - upload it
-      if (!previewImage.startsWith("data:image/png;base64,")) {
-        alert("Only PNG images are allowed for upload.")
-        return
-      }
-
-      const response = await fetch("/api/images", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: formData.title,
-          image: previewImage,
-          isReplacement: !!currentApp,
-          oldTitle: currentApp?.title,
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        alert(error.error || "Failed to save image")
-        return
-      }
-
-      const { path } = await response.json()
-      previewImage = path
-    } else if (previewImage.startsWith("http://") || previewImage.startsWith("https://")) {
-      // External URL - use as-is (no validation needed, will fail gracefully if invalid)
-      // Just keep the URL
+    if (previewImage.startsWith("http://") || previewImage.startsWith("https://")) {
+      // External URL - use as-is
     } else if (previewImage.startsWith("/")) {
       // Local path - use as-is
-      // Just keep the path
     } else if (previewImage) {
-      // Might be a relative URL or invalid - try to handle gracefully
-      // If it doesn't start with /, assume it's meant to be a local path
+      // If it doesn't start with / or http, assume it's meant to be a local path
       if (!previewImage.startsWith("/")) {
         previewImage = "/" + previewImage
       }
@@ -368,33 +337,6 @@ export default function AdminPanel() {
     } catch (error) {
       console.error("[v0] Error saving app:", error)
     }
-  }
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validate PNG format
-    if (file.type !== "image/png") {
-      alert("Only PNG images are allowed. Please select a PNG file.")
-      e.target.value = ""
-      return
-    }
-
-    // Validate file size (100KB)
-    const MAX_SIZE = 100 * 1024
-    if (file.size > MAX_SIZE) {
-      alert(`Image size exceeds 100KB limit (${Math.round(file.size / 1024)}KB). Please use a smaller image.`)
-      e.target.value = ""
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64String = reader.result as string
-      setFormData({ ...formData, previewImage: base64String })
-    }
-    reader.readAsDataURL(file)
   }
 
   useEffect(() => {
@@ -725,38 +667,19 @@ export default function AdminPanel() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label>App Icon</Label>
+              <Label>App Icon URL</Label>
               <div className="flex gap-3 items-start">
                 <div className="flex-1 space-y-2">
                   <Input
                     id="previewImage"
                     value={formData.previewImage}
                     onChange={(e) => setFormData({ ...formData, previewImage: e.target.value })}
-                    placeholder="Enter image URL (https://...) or upload PNG file"
+                    placeholder="Enter image URL (https://example.com/image.png) or local path (/images/icon.png)"
                     className="rounded-lg"
                   />
                   <p className="text-xs text-muted-foreground">
-                    You can paste an image URL (e.g., https://example.com/image.png) or upload a PNG file
+                    Paste an image URL or enter a local path (e.g., /images/icon.png)
                   </p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="rounded-lg"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload PNG
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/png"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </div>
                 </div>
                 {formData.previewImage && (
                   <div className="flex-shrink-0">
