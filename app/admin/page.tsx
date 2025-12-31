@@ -15,6 +15,7 @@ import {
   LogOut,
   ChevronUp,
   ChevronDown,
+  Upload,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -50,6 +51,7 @@ export default function AdminPanel() {
     isNew: false,
   })
   const editorRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { theme, mounted } = useTheme()
 
   useEffect(() => {
@@ -173,6 +175,18 @@ export default function AdminPanel() {
     saveApps(updatedApps)
     window.dispatchEvent(new Event("apps-updated"))
     setIsEditing(false)
+  }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      setFormData({ ...formData, previewImage: base64String })
+    }
+    reader.readAsDataURL(file)
   }
 
   useEffect(() => {
@@ -481,14 +495,48 @@ export default function AdminPanel() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="previewImage">App Icon URL</Label>
-              <Input
-                id="previewImage"
-                value={formData.previewImage}
-                onChange={(e) => setFormData({ ...formData, previewImage: e.target.value })}
-                placeholder="/images/app-icon.png"
-                className="rounded-lg"
-              />
+              <Label>App Icon</Label>
+              <div className="flex gap-3 items-start">
+                <div className="flex-1 space-y-2">
+                  <Input
+                    id="previewImage"
+                    value={formData.previewImage}
+                    onChange={(e) => setFormData({ ...formData, previewImage: e.target.value })}
+                    placeholder="/images/app-icon.png or paste URL"
+                    className="rounded-lg"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="rounded-lg"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Image
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+                {formData.previewImage && (
+                  <div className="flex-shrink-0">
+                    <Image
+                      src={formData.previewImage || "/placeholder.svg"}
+                      alt="Preview"
+                      width={64}
+                      height={64}
+                      className="object-cover w-16 h-16 rounded-lg border"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               <input
