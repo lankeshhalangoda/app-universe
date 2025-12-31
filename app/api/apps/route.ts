@@ -24,7 +24,12 @@ async function ensureDir(dir: string) {
   try {
     await fs.access(dir)
   } catch {
-    await fs.mkdir(dir, { recursive: true })
+    try {
+      await fs.mkdir(dir, { recursive: true })
+    } catch (error) {
+      console.error(`[v0] Failed to create directory ${dir}:`, error)
+      throw new Error(`Cannot create directory: ${dir}`)
+    }
   }
 }
 
@@ -95,43 +100,77 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    // Ensure data directory exists first
+    const dataDir = path.join(process.cwd(), "data")
+    try {
+      await fs.access(dataDir)
+    } catch {
+      await fs.mkdir(dataDir, { recursive: true })
+    }
+    
+    // Then ensure apps directory exists
     await ensureDir(APPS_DIR)
-    const app: App = await request.json()
+    
+    let app: App
+    try {
+      app = await request.json()
+    } catch (error) {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 })
+    }
     
     if (!app.title || !app.title.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
     }
     
+    if (!app.id) {
+      return NextResponse.json({ error: "App ID is required" }, { status: 400 })
+    }
+    
     const filename = `${sanitizeFilename(app.title)}.json`
+    
+    if (!filename || filename === ".json") {
+      return NextResponse.json({ error: "Invalid title" }, { status: 400 })
+    }
+    
     const filePath = path.join(APPS_DIR, filename)
 
     // If editing existing app, check if title changed and delete old file
     if (app.id) {
-      const files = await fs.readdir(APPS_DIR)
-      const jsonFiles = files.filter((f) => f.endsWith(".json"))
-      
-      for (const file of jsonFiles) {
-        const oldPath = path.join(APPS_DIR, file)
-        try {
-          const content = await fs.readFile(oldPath, "utf-8")
-          const oldApp = JSON.parse(content) as App
-          
-          // If same ID but different title, delete old file
-          if (oldApp.id === app.id && oldApp.title !== app.title && file !== filename) {
-            await fs.unlink(oldPath)
-            break
+      try {
+        const files = await fs.readdir(APPS_DIR)
+        const jsonFiles = files.filter((f) => f.endsWith(".json"))
+        
+        for (const file of jsonFiles) {
+          const oldPath = path.join(APPS_DIR, file)
+          try {
+            const content = await fs.readFile(oldPath, "utf-8")
+            const oldApp = JSON.parse(content) as App
+            
+            // If same ID but different title, delete old file
+            if (oldApp.id === app.id && oldApp.title !== app.title && file !== filename) {
+              await fs.unlink(oldPath)
+              break
+            }
+          } catch (err) {
+            // Continue if file can't be read
+            console.error(`[v0] Error reading file ${file}:`, err)
           }
-        } catch {
-          // Continue if file can't be read
         }
+      } catch (err) {
+        console.error("[v0] Error reading apps directory:", err)
+        // Continue anyway - might be first app
       }
     }
 
-    await fs.writeFile(filePath, JSON.stringify(app, null, 2))
+    await fs.writeFile(filePath, JSON.stringify(app, null, 2), "utf-8")
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Error saving app:", error)
-    return NextResponse.json({ error: "Failed to save app" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json(
+      { error: "Failed to save app", details: errorMessage },
+      { status: 500 }
+    )
   }
 }
 

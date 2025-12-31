@@ -284,18 +284,19 @@ export default function AdminPanel() {
 
     const fullDescription = editorRef.current?.innerHTML || formData.fullDescription || ""
 
-    // Handle image - only URLs and local paths are supported
+    // Handle image - only URLs are supported now
     let previewImage = formData.previewImage.trim()
     
-    if (previewImage.startsWith("http://") || previewImage.startsWith("https://")) {
-      // External URL - use as-is
-    } else if (previewImage.startsWith("/")) {
-      // Local path - use as-is
-    } else if (previewImage) {
-      // If it doesn't start with / or http, assume it's meant to be a local path
-      if (!previewImage.startsWith("/")) {
-        previewImage = "/" + previewImage
-      }
+    // If empty, use default image
+    if (!previewImage) {
+      previewImage = "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin16.png"
+    }
+    
+    // Validate it's a URL
+    if (!previewImage.startsWith("http://") && !previewImage.startsWith("https://")) {
+      // If not a URL, show error
+      alert("Please enter a valid image URL (must start with http:// or https://)")
+      return
     }
 
     const app: App = currentApp
@@ -674,11 +675,11 @@ export default function AdminPanel() {
                     id="previewImage"
                     value={formData.previewImage}
                     onChange={(e) => setFormData({ ...formData, previewImage: e.target.value })}
-                    placeholder="Enter image URL (https://example.com/image.png) or local path (/images/icon.png)"
+                    placeholder="Enter image URL (https://example.com/image.png)"
                     className="rounded-lg"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Paste an image URL or enter a local path (e.g., /images/icon.png)
+                    Enter a valid image URL (must start with http:// or https://)
                   </p>
                 </div>
                 {formData.previewImage && (
