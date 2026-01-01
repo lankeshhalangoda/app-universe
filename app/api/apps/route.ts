@@ -117,85 +117,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "App ID is required" }, { status: 400 })
     }
     
-    // In production (Vercel), use GitHub API to commit files
+    // In production (Vercel), file system is read-only
+    // Admin panel should only be used locally
     if (IS_PRODUCTION) {
-      const filename = `${sanitizeFilename(app.title)}.json`
-      const filePath = `data/apps/${filename}`
-      const content = JSON.stringify(app, null, 2)
-      
-      // Call GitHub API directly (server-side)
-      const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-      const GITHUB_REPO = process.env.GITHUB_REPO
-      const GITHUB_BRANCH = process.env.GITHUB_BRANCH || "main"
-
-      if (!GITHUB_TOKEN || !GITHUB_REPO) {
-        console.error("[v0] GitHub credentials not configured")
-        return NextResponse.json(
-          { error: "GitHub credentials not configured. Please set GITHUB_TOKEN and GITHUB_REPO in Vercel environment variables." },
-          { status: 500 }
-        )
-      }
-
-      try {
-        // Get current file SHA if it exists
-        let sha: string | undefined
-        try {
-          const getFileRes = await fetch(
-            `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
-            {
-              headers: {
-                Authorization: `Bearer ${GITHUB_TOKEN}`,
-                Accept: "application/vnd.github.v3+json",
-                "User-Agent": "App-Universe",
-              },
-            }
-          )
-          if (getFileRes.ok) {
-            const fileData = await getFileRes.json()
-            sha = fileData.sha
-          }
-        } catch {}
-
-        // Commit file
-        const contentBase64 = Buffer.from(content).toString("base64")
-        const response = await fetch(
-          `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`,
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${GITHUB_TOKEN}`,
-              Accept: "application/vnd.github.v3+json",
-              "Content-Type": "application/json",
-              "User-Agent": "App-Universe",
-            },
-            body: JSON.stringify({
-              message: `Update app: ${app.title}`,
-              content: contentBase64,
-              branch: GITHUB_BRANCH,
-              ...(sha && { sha }),
-            }),
-          }
-        )
-
-        if (!response.ok) {
-          const errorText = await response.text()
-          let errorData: any
-          try {
-            errorData = JSON.parse(errorText)
-          } catch {
-            errorData = { message: errorText.substring(0, 200) }
-          }
-          throw new Error(errorData.message || "GitHub API error")
-        }
-
-        return NextResponse.json({ success: true })
-      } catch (error: any) {
-        console.error("[v0] GitHub commit failed:", error)
-        return NextResponse.json(
-          { error: "Failed to commit to GitHub", details: error?.message || String(error) },
-          { status: 500 }
-        )
-      }
+      return NextResponse.json(
+        { error: "Admin panel is only available in development. Please use the admin panel locally and commit changes via git." },
+        { status: 403 }
+      )
     }
     
     // Development: write to files
@@ -237,6 +165,14 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    // In production, file system is read-only
+    if (IS_PRODUCTION) {
+      return NextResponse.json(
+        { error: "Admin panel is only available in development. Please use the admin panel locally and commit changes via git." },
+        { status: 403 }
+      )
+    }
+
     const { id } = await request.json()
     
     // Find the file by reading all files and matching the ID
