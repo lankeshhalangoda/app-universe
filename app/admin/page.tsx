@@ -29,7 +29,6 @@ import type { App } from "@/lib/apps-data"
 import { useTheme } from "next-themes"
 
 export default function AdminPanel() {
-  const [isProduction, setIsProduction] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [username, setUsername] = useState("")
@@ -55,8 +54,6 @@ export default function AdminPanel() {
   const { theme, mounted } = useTheme()
 
   useEffect(() => {
-    // Check if we're in production (hosted environment)
-    setIsProduction(window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
     checkAuth()
   }, [])
 
@@ -347,50 +344,6 @@ export default function AdminPanel() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Spinner className="size-8 text-primary mb-4" />
             <p className="text-muted-foreground">Checking authentication...</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // Show message if in production
-  if (isProduction) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50/30 via-blue-50/30 to-purple-50/30 dark:from-pink-950/10 dark:via-blue-950/10 dark:to-purple-950/10 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-background/80 backdrop-blur-xl">
-          <CardHeader className="space-y-6 pb-8 pt-10">
-            <div className="flex flex-col items-center gap-4">
-              {mounted && (
-                <Image
-                  src={theme === "dark" ? "/images/emojot-logo-white.png" : "/images/emojot-logo-black.png"}
-                  alt="Emojot Logo"
-                  width={160}
-                  height={50}
-                  className="h-12 w-auto"
-                  priority
-                />
-              )}
-              <div className="text-center space-y-2">
-                <CardTitle className="text-3xl font-bold tracking-tight">Admin Panel</CardTitle>
-                <p className="text-muted-foreground text-sm">Local Development Only</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="px-8 pb-10">
-            <div className="space-y-4 text-center">
-              <p className="text-muted-foreground">
-                The admin panel is only available when running locally. Please run the development server on your machine to manage apps.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                After making changes locally, commit them to git and push to update the production site.
-              </p>
-              <Button asChild variant="outline" className="mt-4">
-                <Link href="/">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to App Universe
-                </Link>
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
