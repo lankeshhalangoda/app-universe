@@ -1,9 +1,14 @@
 [
   "bulk-qr",
+  "bulk-portal-access-generator",
+  "google-place-id-finder",
   "csm-suite",
   "email-builder",
+  "raffle-draw",
+  "bulk-emosignature-link-generator",
   "wf-builder",
   "emosignature",
+  "lanka-tiles",
   "base64",
   "short-io",
   "coolors"

@@ -1,0 +1,20 @@
+{
+  "id": "lanka-tiles",
+  "title": "TileCraft Studio 3D",
+  "url": "https://v0-mobile-report-ui-prototype.vercel.app/",
+  "description": "Comprehensive reporting and analytics dashboard for Lanka Tiles operations. Track performance metrics, generate reports, and analyze business data.",
+  "fullDescription": "<p data-start=\"152\" data-end=\"465\">This application is an interactive quotation and 3D visualization platform designed for interior and construction planning. Users begin by selecting their preferred tile sets to generate a customized quotation. In the next step, the system renders a realistic 3D room where the chosen tiles are applied instantly.</p>\n<p data-start=\"467\" data-end=\"862\">Users can then drag and drop fixtures and furniture—such as sinks, bathroom sets, beds, sofas, and other interior elements—into the space. Each object can be positioned, rotated, and viewed from multiple angles in real time. This immersive experience helps customers clearly visualize how their space will look before construction or purchase, reducing uncertainty and improving decision-making.</p>",
+  "tags": [
+    "emojot",
+    "Lanka Tiles",
+    "Reporting",
+    "Analytics",
+    "Dashboard",
+    "Business"
+  ],
+  "category": "internal",
+  "previewImage": "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin31.png",
+  "images": [],
+  "isNew": false,
+  "order": 0
+}

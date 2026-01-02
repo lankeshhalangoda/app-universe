@@ -1,0 +1,20 @@
+{
+  "id": "google-place-id-finder",
+  "title": "Bulk Google Place ID Finder",
+  "url": "https://google-bulk-place-id-finder.vercel.app/",
+  "description": "Find Google Place IDs in bulk for multiple locations. Essential for location-based services, mapping applications, and Google Maps integrations.",
+  "fullDescription": "Find Google Place IDs in bulk for multiple locations. Essential for location-based services, mapping applications, and Google Maps integrations. This tool allows you to process hundreds of addresses or place names simultaneously, retrieving their corresponding Google Place IDs efficiently. Perfect for businesses managing multiple locations, developers working with Google Maps API, or data analysts processing location data. Features include batch processing, CSV import/export, validation, and error handling for accurate Place ID retrieval.",
+  "tags": [
+    "emojot",
+    "Google Maps",
+    "Place ID",
+    "Location",
+    "Bulk",
+    "API"
+  ],
+  "category": "internal",
+  "previewImage": "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin27.png",
+  "images": [],
+  "isNew": true,
+  "order": 0
+}

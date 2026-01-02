@@ -1,0 +1,20 @@
+{
+  "id": "bulk-portal-access-generator",
+  "title": "Bulk Portal Access Generator",
+  "url": "https://v0-bulk-portal-access.vercel.app",
+  "description": "Generate portal access credentials in bulk for multiple users or accounts. Streamline user onboarding and access management for large-scale deployments.",
+  "fullDescription": "Generate portal access credentials in bulk for multiple users or accounts. Streamline user onboarding and access management for large-scale deployments. This tool enables administrators to create hundreds of portal access accounts simultaneously, reducing manual work and ensuring consistency. Features include CSV import/export, customizable access levels, automated credential generation, validation, and secure distribution. Perfect for enterprise rollouts, event registrations, or managing access for large teams and organizations.",
+  "tags": [
+    "emojot",
+    "Portal",
+    "Access",
+    "Bulk",
+    "User Management",
+    "Credentials"
+  ],
+  "category": "internal",
+  "previewImage": "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin29.png",
+  "images": [],
+  "isNew": true,
+  "order": 0
+}

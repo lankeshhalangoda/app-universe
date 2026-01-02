@@ -1,0 +1,20 @@
+{
+  "id": "bulk-emosignature-link-generator",
+  "title": "Bulk Emosignature Link Generator",
+  "url": "https://emosignature-link-generator.vercel.app/",
+  "description": "Generate multiple emosignature links in bulk for campaigns, events, or marketing initiatives. Streamline your signature link creation process with batch processing capabilities.",
+  "fullDescription": "Generate multiple emosignature links in bulk for companies, campaigns, events, or marketing initiatives. Streamline your signature link creation process with batch processing capabilities. This tool allows you to create hundreds of personalized emosignature links simultaneously, saving time and effort. Features include batch validation, progress tracking, export options, and automated link management. Perfect for large-scale workflows.",
+  "tags": [
+    "emojot",
+    "Emosignature",
+    "Link Generator",
+    "Bulk",
+    "Campaign",
+    "Marketing"
+  ],
+  "category": "internal",
+  "previewImage": "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin30.png",
+  "images": [],
+  "isNew": true,
+  "order": 0
+}

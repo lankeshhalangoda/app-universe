@@ -1,0 +1,20 @@
+{
+  "id": "raffle-draw",
+  "title": "Raffle Draw",
+  "url": "https://emojot-raffle-draw.vercel.app/",
+  "description": "Conduct fair and transparent raffle draws for events, contests, or giveaways. Randomly select winners from participant lists with full audit trails and verification.",
+  "fullDescription": "Conduct fair and transparent raffle draws for events, contests, or giveaways. Randomly select winners from participant lists with full audit trails and verification. This application ensures complete transparency in the selection process, making it ideal for corporate events, marketing campaigns, or community contests. Features include customizable draw settings, multiple winner selection, export capabilities, and detailed reporting. Built with fairness and integrity in mind, providing verifiable results for all participants.",
+  "tags": [
+    "emojot",
+    "Raffle",
+    "Draw",
+    "Contest",
+    "Event",
+    "Random"
+  ],
+  "category": "internal",
+  "previewImage": "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin26.png",
+  "images": [],
+  "isNew": true,
+  "order": 0
+}
