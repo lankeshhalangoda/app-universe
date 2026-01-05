@@ -51,9 +51,11 @@ export default function AdminPanel() {
     isNew: false,
   })
   const editorRef = useRef<HTMLDivElement>(null)
-  const { theme, mounted } = useTheme()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     checkAuth()
   }, [])
 

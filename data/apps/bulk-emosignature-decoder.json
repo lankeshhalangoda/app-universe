@@ -1,0 +1,21 @@
+{
+  "id": "bulk-emosignature-decoder",
+  "title": "Bulk EmoSignature URL Decoder",
+  "url": "https://bulk-emosignature-decoder.vercel.app/",
+  "description": "Decode base64-encoded emoSignature parameters from Excel files or single URLs. Extract and decode signature data efficiently for analysis, validation, or processing workflows.",
+  "fullDescription": "Decode base64-encoded emoSignature parameters from Excel files or single URLs. Extract and decode signature data efficiently for analysis, validation, or processing workflows. This tool supports bulk processing of thousands of encoded URLs from Excel spreadsheets, making it perfect for data analysis, signature verification, and batch operations. Features include Excel file upload support (up to 5000 rows), single URL decoding, batch validation, progress tracking, and export capabilities. Ideal for developers, data analysts, and administrators working with emoSignature integrations.",
+  "tags": [
+    "emojot",
+    "Emosignature",
+    "Decoder",
+    "Base64",
+    "Bulk",
+    "Excel"
+  ],
+  "category": "internal",
+  "previewImage": "https://storage.emojot.com/pictures/generalImages/67761761cb917201e680c031-skin32.png",
+  "images": [],
+  "isNew": true,
+  "order": 0
+}
+
